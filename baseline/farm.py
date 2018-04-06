@@ -18,8 +18,8 @@ def standalone_headless_isolated(pq, cq, plock):
     print('starting headless...',pq,cq)
     try:
         import traceback
-        from osim.env import RunEnv
-        e = RunEnv(visualize = args.visualize,max_obstacles=args.obstacles)
+        from osim.env import L2RunEnv
+        e = L2RunEnv(visualize = args.visualize)
     except Exception as e:
         print('error on start of standalone')
         traceback.print_exc()
@@ -53,7 +53,7 @@ def standalone_headless_isolated(pq, cq, plock):
             #     raise Exception('pipe message received by headless is not a tuple')
 
             if msg[0] == 'reset':
-                o = e.reset(difficulty=args.difficulty)
+                o = e.reset()
                 # conn.send(floatify(o))
                 cq.put(floatify(o))
                 # conn.put(floatify(o))

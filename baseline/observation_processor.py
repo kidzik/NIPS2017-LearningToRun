@@ -135,6 +135,7 @@ flatten = lambda l: [item for sublist in l for item in sublist]
 processed_dims = 48 + 14*1 + 3*2 + 1*0 + 8
 # processed_dims = 41*8
 def generate_observation(new, old=None, step=None):
+    return new, new
 
     global _stepsize
     if step is None:

@@ -47,7 +47,7 @@ class Game(object):
     train_interval = 1
     train_times = 100
     action_dim = 18
-    state_dim = 147
+    state_dim = 143
     max_steps = 1000 // 4 
     cnt = 0
     GAMMA = 0.96

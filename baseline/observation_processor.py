@@ -25,23 +25,6 @@ def get_observation(self):
 '''
 above was copied from 'osim-rl/osim/env/run.py'.
 observation:
-0 pelvis r
-1 x
-2 y
-3 pelvis vr
-4 vx
-5 vy
-6-11 hip_r .. ankle_l [joint angles] # 7->knee_r, 10->knee_l
-12-17 hip_r .. ankle_l [joint velocity]
-18-19 mass_pos xy
-20-21 mass_vel xy
-22-(22+7x2-1=35) bodypart_positions(x,y) ## 22->head_x, 1->pelvis_x
-36-37 muscles psoas
-38-40 obstacles
-38 x dist
-39 y height
-40 radius
-radius of heel and toe ball: 0.05
 '''
 
 import numpy as np
@@ -79,34 +62,19 @@ class fifo:
             string+='head:{} tail:{}\n'.format(self.head,self.tail)
             f.write(string)
 
+'''
+## Values in the observation vector
+y, vx, vy, ax, ay, rz, vrz, arz of pelvis (8 values)
+x, y, vx, vy, ax, ay, rz, vrz, arz of head, torso, toes_l, toes_r, talus_l, talus_r (9*6 values)
+rz, vrz, arz of ankle_l, ankle_r, back, hip_l, hip_r, knee_l, knee_r (8*3 values)
+activation, fiber_len, fiber_vel for all muscles (3*18)
+x, y, vx, vy, ax, ay ofg center of mass (6)
+8 + 9*6 + 7*3 + 3*18 + 6 = 143
+'''
+
 # 41 dim to 48 dim
 def process_observation(observation):
     o = list(observation) # an array
-
-    pr = o[0]
-
-    px = o[1]
-    py = o[2]
-
-    pvr = o[3]
-
-    pvx = o[4]
-    pvy = o[5]
-
-    for i in range(6,18):
-        o[i]/=4
-
-    o = o + [o[22+i*2+1]-0.9 for i in range(7)] # a copy of original y, not relative y.
-
-    # x and y relative to pelvis
-    for i in range(7): # head pelvis torso, toes and taluses
-        o[22+i*2+0] -= px
-        o[22+i*2+1] -= py
-
-    o[18] -= px # mass pos xy made relative
-    o[19] -= py
-    o[20] -= pvx # mass vel xy made relative
-    o[21] -= pvy
 
     # o[38]= min(6,o[38])/7 # ball info are included later in the stage
     o[38]=0
@@ -115,28 +83,27 @@ def process_observation(observation):
     # o[39]/=5
     # o[40]/=5
 
-    o[0]/=2 # divide pr by 4
-    o[1]=0 # abs value of pel x should not be included
-    o[2]-= 0.9 # minus py by 0.5
+    o[0]-= 0.9 # minus py by 0.5
 
-    o[3] /=4 # divide pvr by 4
-    o[4] /=8 # divide pvx by 10
-    o[5] /=1 # pvy is okay
-
-    o[20]/=1
-    o[21]/=1
+    o[7] /=4 # divide pvr by 4
+    o[1] /=8 # divide pvx by 10
 
     return o
 
 _stepsize = 0.01
 flatten = lambda l: [item for sublist in l for item in sublist]
 
+def final_processing(l):
+    # normalize to prevent excessively large input
+    for idx in range(len(l)):
+        if l[idx] > 1: l[idx] = np.sqrt(l[idx])
+        if l[idx] < -1: l[idx] = - np.sqrt(-l[idx])
+    return l
+
 # expand observation from 48 to 48*7 dims
 processed_dims = 48 + 14*1 + 3*2 + 1*0 + 8
 # processed_dims = 41*8
 def generate_observation(new, old=None, step=None):
-    return new, new
-
     global _stepsize
     if step is None:
         raise Exception('step should be a valid integer')
@@ -156,6 +123,8 @@ def generate_observation(new, old=None, step=None):
         raise Exception('step not monotonically increasing by one')
     else:
         old['last'] += 1
+
+    return final_processing(process_observation(new)), old
 
     if step > 1: # bug in osim-rl
         if q.fromtail(0)[36] != new[36]:
@@ -324,11 +293,6 @@ def generate_observation(new, old=None, step=None):
     # for i,n in enumerate(new_processed):
     #     print(i,n)
 
-    def final_processing(l):
-        # normalize to prevent excessively large input
-        for idx in range(len(l)):
-            if l[idx] > 1: l[idx] = np.sqrt(l[idx])
-            if l[idx] < -1: l[idx] = - np.sqrt(-l[idx])
     final_processing(final_observation)
 
     return final_observation, old

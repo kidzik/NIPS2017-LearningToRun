@@ -5,7 +5,6 @@ os.environ['KERAS_BACKEND'] = 'tensorflow'
 import tensorflow as tf
 import keras.backend as K
 K.set_image_dim_ordering('tf')
-from osim.env import RunEnv
 import numpy as np
 import random
 import argparse
@@ -39,7 +38,7 @@ class Game(object):
     from keras import backend as K
     K.set_session(sess)
     action_dim = 18
-    state_dim = 76
+    state_dim = 143
     max_steps = 1000
     cnt = 0
     falloff = 0

@@ -65,27 +65,26 @@ class fifo:
 '''
 ## Values in the observation vector
 y, vx, vy, ax, ay, rz, vrz, arz of pelvis (8 values)
-x, y, vx, vy, ax, ay, rz, vrz, arz of head, torso, toes_l, toes_r, talus_l, talus_r (9*6 values)
-rz, vrz, arz of ankle_l, ankle_r, back, hip_l, hip_r, knee_l, knee_r (8*3 values)
+x, y, vx, vy, ax, ay, rz, vrz, arz of head, torso, toes_l, toes_r, talus_l, talus_r (9*6 = 54 values)
+rz, vrz, arz of ankle_l, ankle_r, back, hip_l, hip_r, knee_l, knee_r (7*3 = 21 values)
 activation, fiber_len, fiber_vel for all muscles (3*18)
 x, y, vx, vy, ax, ay ofg center of mass (6)
 8 + 9*6 + 7*3 + 3*18 + 6 = 143
 '''
-
 # 41 dim to 48 dim
 def process_observation(observation):
     o = list(observation) # an array
 
     # o[38]= min(6,o[38])/7 # ball info are included later in the stage
-    o[38]=0
-    o[39]=0
-    o[40]=0
+    # o[38]=0
+    # o[39]=0
+    # o[40]=0
     # o[39]/=5
     # o[40]/=5
 
     o[0]-= 0.9 # minus py by 0.5
 
-    o[7] /=4 # divide pvr by 4
+    o[8] /=4 # divide pvr by 4
     o[1] /=8 # divide pvx by 10
 
     return o

@@ -37,8 +37,8 @@ class Game(object):
     sess = tf.Session(config=config)
     from keras import backend as K
     K.set_session(sess)
-    action_dim = 18
-    state_dim = 143
+    action_dim = 22
+    state_dim = 167
     max_steps = 1000
     cnt = 0
     falloff = 0

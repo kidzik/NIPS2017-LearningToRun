@@ -46,8 +46,8 @@ class Game(object):
     lr_critic = 3e-4
     train_interval = 1
     train_times = 100
-    action_dim = 18
-    state_dim = 143
+    action_dim = 22
+    state_dim = 167
     max_steps = 1000 // 4 
     cnt = 0
     GAMMA = 0.96

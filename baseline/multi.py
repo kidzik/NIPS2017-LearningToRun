@@ -45,11 +45,11 @@ class fastenv:
             self.stepcount+=1
             oo,r,d,i = self.e.step(action)
 
-            headx = oo[8]
-            py = oo[0]
+            headx = oo["body_pos"]["head"][0]
+            py = oo["body_pos"]["pelvis"][1]
 
-            kneer = oo[80]
-            kneel = oo[77]
+            kneer = oo["joint_pos"]["knee_r"][0]
+            kneel = oo["joint_pos"]["knee_r"][0]
 
             lean = min(0.3, max(0, headx - 0.15)) * 0.05
             joint = sum([max(0, k-0.1) for k in [kneer, kneel]]) * 0.03
@@ -70,6 +70,6 @@ class fastenv:
 
         oo = self.e.reset()
         # o = self.e.reset(difficulty=2)
-        self.lastx = oo[1]
+        self.lastx = oo["body_pos"]["pelvis"][0]
         o = self.obg(oo)
         return o

@@ -18,8 +18,8 @@ def standalone_headless_isolated(pq, cq, plock):
     print('starting headless...',pq,cq)
     try:
         import traceback
-        from osim.env import L2RunEnv
-        e = L2RunEnv(visualize = args.visualize)
+        from osim.env import Run3DEnv
+        e = Run3DEnv(visualize = args.visualize)
     except Exception as e:
         print('error on start of standalone')
         traceback.print_exc()
@@ -38,7 +38,8 @@ def standalone_headless_isolated(pq, cq, plock):
         cq.put(('error',e))
 
     def floatify(np):
-        return [float(np[i]) for i in range(len(np))]
+        return np
+        # TODO: return [float(np[i]) for i in range(len(np))]
 
     try:
         while True:
@@ -53,12 +54,12 @@ def standalone_headless_isolated(pq, cq, plock):
             #     raise Exception('pipe message received by headless is not a tuple')
 
             if msg[0] == 'reset':
-                o = e.reset()
+                o = e.reset(project = False)
                 # conn.send(floatify(o))
                 cq.put(floatify(o))
                 # conn.put(floatify(o))
             elif msg[0] == 'step':
-                o,r,d,i = e.step(msg[1])
+                o,r,d,i = e.step(msg[1], project = False)
                 o = floatify(o) # floatify the observation
                 cq.put((o,r,d,i))
                 # conn.put(ordi)
@@ -172,15 +173,15 @@ class ei: # Environment Instance
         # r = self.pc.recv()
         r = self.cq.get()
 
-        # isinstance is dangerous, commented out
-        # if isinstance(r,tuple):
-        if r[0] == 'error':
-            # read the exception string
-            e = r[1]
-            self.pretty('got exception')
-            self.pretty(e)
+        # isinstance is dangerous TODO
+        if isinstance(r,tuple):
+            if r[0] == 'error':
+                # read the exception string
+                e = r[1]
+                self.pretty('got exception')
+                self.pretty(e)
 
-            raise Exception(e)
+                raise Exception(e)
         return r
 
     def reset(self):

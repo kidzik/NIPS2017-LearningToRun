@@ -1,32 +1,3 @@
-def get_observation(self):
-    bodies = ['head', 'pelvis', 'torso', 'toes_l', 'toes_r', 'talus_l', 'talus_r']
-
-    pelvis_pos = [self.pelvis.getCoordinate(i).getValue(self.osim_model.state) for i in range(3)]
-    pelvis_vel = [self.pelvis.getCoordinate(i).getSpeedValue(self.osim_model.state) for i in range(3)]
-
-    jnts = ['hip_r','knee_r','ankle_r','hip_l','knee_l','ankle_l']
-    joint_angles = [self.osim_model.get_joint(jnts[i]).getCoordinate().getValue(self.osim_model.state) for i in range(6)]
-    joint_vel = [self.osim_model.get_joint(jnts[i]).getCoordinate().getSpeedValue(self.osim_model.state) for i in range(6)]
-
-    mass_pos = [self.osim_model.model.calcMassCenterPosition(self.osim_model.state)[i] for i in range(2)]
-    mass_vel = [self.osim_model.model.calcMassCenterVelocity(self.osim_model.state)[i] for i in range(2)]
-
-    body_transforms = [[self.osim_model.get_body(body).getTransformInGround(self.osim_model.state).p()[i] for i in range(2)] for body in bodies]
-
-    muscles = [ self.env_desc['muscles'][self.MUSCLES_PSOAS_L], self.env_desc['muscles'][self.MUSCLES_PSOAS_R] ]
-
-    # see the next obstacle
-    obstacle = self.next_obstacle()
-
-#        feet = [opensim.HuntCrossleyForce.safeDownCast(self.osim_model.forceSet.get(j)) for j in range(20,22)]
-    self.current_state = pelvis_pos + pelvis_vel + joint_angles + joint_vel + mass_pos + mass_vel + list(flatten(body_transforms)) + muscles + obstacle
-    return self.current_state
-
-'''
-above was copied from 'osim-rl/osim/env/run.py'.
-observation:
-'''
-
 import numpy as np
 
 class fifo:
@@ -62,6 +33,45 @@ class fifo:
             string+='head:{} tail:{}\n'.format(self.head,self.tail)
             f.write(string)
 
+def project_observation(observation):
+    state_desc = observation
+
+    # Augmented environment from the L2R challenge
+    res = []
+    pelvis = None
+
+    for body_part in ["pelvis", "head","torso","toes_l","toes_r","talus_l","talus_r"]:
+        cur = []
+        cur += state_desc["body_pos"][body_part][0:2]
+        cur += state_desc["body_vel"][body_part][0:2]
+        cur += state_desc["body_acc"][body_part][0:2]
+        cur += state_desc["body_pos_rot"][body_part][2:]
+        cur += state_desc["body_vel_rot"][body_part][2:]
+        cur += state_desc["body_acc_rot"][body_part][2:]
+        if body_part == "pelvis":
+            pelvis = cur
+            res += cur[1:]
+        else:
+            cur_upd = cur
+            cur_upd[:2] = [cur[i] - pelvis[i] for i in range(2)]
+            cur_upd[6:7] = [cur[i] - pelvis[i] for i in range(6,7)]
+            res += cur
+
+    for joint in ["ankle_l","ankle_r","back","hip_l","hip_r","knee_l","knee_r"]:
+        res += state_desc["joint_pos"][joint]
+        res += state_desc["joint_vel"][joint]
+        res += state_desc["joint_acc"][joint]
+
+    for muscle in state_desc["muscles"].keys():
+        res += [state_desc["muscles"][muscle]["activation"]]
+        res += [state_desc["muscles"][muscle]["fiber_length"]]
+        res += [state_desc["muscles"][muscle]["fiber_velocity"]]
+
+    cm_pos = [state_desc["misc"]["mass_center_pos"][i] - pelvis[i] for i in range(2)]
+    res = res + cm_pos + state_desc["misc"]["mass_center_vel"] + state_desc["misc"]["mass_center_acc"]
+
+    return res
+
 '''
 ## Values in the observation vector
 y, vx, vy, ax, ay, rz, vrz, arz of pelvis (8 values)
@@ -73,6 +83,7 @@ x, y, vx, vy, ax, ay ofg center of mass (6)
 '''
 # 41 dim to 48 dim
 def process_observation(observation):
+    observation = project_observation(observation)
     o = list(observation) # an array
 
     # o[38]= min(6,o[38])/7 # ball info are included later in the stage

@@ -68,7 +68,10 @@ def project_observation(observation):
         res += [state_desc["muscles"][muscle]["fiber_velocity"]]
 
     cm_pos = [state_desc["misc"]["mass_center_pos"][i] - pelvis[i] for i in range(2)]
-    res = res + cm_pos + state_desc["misc"]["mass_center_vel"] + state_desc["misc"]["mass_center_acc"]
+    res += cm_pos + state_desc["misc"]["mass_center_vel"] + state_desc["misc"]["mass_center_acc"]
+
+    res += state_desc["forces"]["foot_l"][0:6] + state_desc["forces"]["foot_l"][12:24]
+    res += state_desc["forces"]["foot_r"][0:6] + state_desc["forces"]["foot_r"][12:24]
 
     return res
 

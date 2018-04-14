@@ -60,11 +60,13 @@ class Game(object):
     actor = ActorNetwork(sess, state_dim, action_dim, BATCH_SIZE, TAU, lr_actor)
     critic = CriticNetwork(sess, state_dim, action_dim, BATCH_SIZE, TAU, lr_critic)
     
-    callback = TensorBoard(log_path)
-    callback.set_model(critic.model)
+    def __init__(self, log_path = "logs"):
+        self.log_path = log_path
+        self.callback = TensorBoard(log_path)
+        self.callback.set_model(self.critic.model)
 
     def write_log(self, callback, names, logs, batch_no):
-        output = open('logs/data.txt', 'w')
+        output = open('%s/data.txt' % self.log_path, 'w')
         output.write(str(self.LOG) + ' ' + str(self.trainnum))
         output.close()
         for name, value in zip(names, itertools.repeat(logs)):
@@ -190,27 +192,27 @@ class Game(object):
 
     def save(self):
         self.modelcnt = self.modelcnt + 1
-        self.actor.target_model.save_weights("logs/actormodel.h5", overwrite=True)
-        self.critic.target_model.save_weights("logs/criticmodel.h5", overwrite=True)
-        self.actor.target_model.save_weights("logs/actormodel{}.h5".format(self.modelcnt))
-        self.critic.target_model.save_weights("logs/criticmodel{}.h5".format(self.modelcnt))
-        self.rpm.save("logs/rpm.pickle")
+        self.actor.target_model.save_weights("%s/actormodel.h5", overwrite=True)
+        self.critic.target_model.save_weights("%s/criticmodel.h5", overwrite=True)
+        self.actor.target_model.save_weights("{}/actormodel{}.h5".format(self.log_path,self.modelcnt))
+        self.critic.target_model.save_weights("{}/criticmodel{}.h5".format(self.log_path,self.modelcnt))
+        self.rpm.save("%s/rpm.pickle" % self.log_path)
         print("save")
   
     def pre(self):
         print("Now we load the weight")
         try:
-            input = open('logs/data.txt', 'r')
+            input = open('%s/data.txt' % self.log_path, 'r')
             self.LOG, self.trainnum = map(int, input.read().split(' '))
             print("LOG", self.LOG, "trainnum", self.trainnum)
             input.close()
             print("log found")
-            self.critic.model.load_weights("logs/criticmodel.h5")
-            self.critic.target_model.load_weights("logs/criticmodel.h5")
-            self.actor.model.load_weights("logs/actormodel.h5")
-            self.actor.target_model.load_weights("logs/actormodel.h5")
+            self.critic.model.load_weights("%s/criticmodel.h5" % self.log_path)
+            self.critic.target_model.load_weights("%s/criticmodel.h5" % self.log_path)
+            self.actor.model.load_weights("%s/actormodel.h5" % self.log_path)
+            self.actor.target_model.load_weights("%s/actormodel.h5" % self.log_path)
             print("Weight load successfully")
-            self.rpm.load('logs/rpm.pickle')
+            self.rpm.load('%s/rpm.pickle' % self.log_path)
             print("rmp success")
         except:
             if self.LOG > 0:
@@ -237,7 +239,11 @@ class Game(object):
         print("Finish.")
 
 if __name__ == "__main__":
-    t = Game()
+    import argparse
+    parser = argparse.ArgumentParser(description="start training in master")
+    parser.add_argument('--log','-l', help='logs directory', type=str, default="logs")
+    args = parser.parse_args()
+    t = Game(log_path = args.log)
     if(t.pre() == False):
         exit()
     t.run()

@@ -57,7 +57,7 @@ def project_observation(observation):
             cur_upd[6:7] = [cur[i] - pelvis[i] for i in range(6,7)]
             res += cur
 
-    for joint in ["ankle_l","ankle_r","back","hip_l","hip_r","knee_l","knee_r"]:
+    for joint in ["ground_pelvis", "ankle_l","ankle_r","back","hip_l","hip_r","knee_l","knee_r"]:
         res += state_desc["joint_pos"][joint]
         res += state_desc["joint_vel"][joint]
         res += state_desc["joint_acc"][joint]

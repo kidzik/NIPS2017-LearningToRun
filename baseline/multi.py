@@ -49,7 +49,7 @@ class fastenv:
             py = oo["body_pos"]["pelvis"][1]
 
             kneer = oo["joint_pos"]["knee_r"][0]
-            kneel = oo["joint_pos"]["knee_r"][0]
+            kneel = oo["joint_pos"]["knee_l"][0]
 
             lean = min(0.3, max(0, headx - 0.15)) * 0.05
             joint = sum([max(0, k-0.1) for k in [kneer, kneel]]) * 0.03

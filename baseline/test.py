@@ -38,7 +38,7 @@ class Game(object):
     from keras import backend as K
     K.set_session(sess)
     action_dim = 22
-    state_dim = 203
+    state_dim = 221
     max_steps = 1000
     cnt = 0
     falloff = 0

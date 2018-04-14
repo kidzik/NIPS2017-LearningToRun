@@ -192,8 +192,8 @@ class Game(object):
 
     def save(self):
         self.modelcnt = self.modelcnt + 1
-        self.actor.target_model.save_weights("%s/actormodel.h5", overwrite=True)
-        self.critic.target_model.save_weights("%s/criticmodel.h5", overwrite=True)
+        self.actor.target_model.save_weights("%s/actormodel.h5" % self.log_path, overwrite=True)
+        self.critic.target_model.save_weights("%s/criticmodel.h5" % self.log_path, overwrite=True)
         self.actor.target_model.save_weights("{}/actormodel{}.h5".format(self.log_path,self.modelcnt))
         self.critic.target_model.save_weights("{}/criticmodel{}.h5".format(self.log_path,self.modelcnt))
         self.rpm.save("%s/rpm.pickle" % self.log_path)
